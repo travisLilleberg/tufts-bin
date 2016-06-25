@@ -1,0 +1,79 @@
+#!/bin/bash
+
+#@file
+#Manages the solr cores
+
+# Libs
+source ~/.bash_functions/msgs
+source ~/bin/which-site
+
+
+# Settings
+solr_home="/Library/Tomcat/solr"
+if [ "${2}" == "this" ]; then
+  sites="${HOME}/Sites"
+  site_name=${PWD#$sites/}
+  site_name=${site_name%%/*}
+  core=${solr_home}/${site_name}
+else
+  core=${solr_home}/${2}
+fi
+err="First argument should be 'create' or 'destroy'.
+  Second argument should be core name.
+  Third argument is optional conf folder for core."
+
+
+# Checks
+if [ -z "${2}" ]; then
+  bad_msg "${err}"
+  exit 1
+fi
+
+
+# Gooo
+case "${1}" in
+  'create')
+    if [ -e ${core} ]; then
+      bad_msg "${2} already exists as a Solr core."
+      exit 1
+    fi
+
+    if [ -z ${3} ]; then
+      solr_conf=${solr_home}/example_conf
+    else
+      if [ ! -d ${3} ]; then
+        bad_msg "${3} is not a directory."
+        exit 1
+      fi
+      solr_conf=${3}
+    fi
+
+    good_msg "Creating the new ${2} Solr core."
+
+    mkdir ${core}
+    touch ${core}/core.properties
+    cp -r ${solr_conf} ${core}/conf
+    if [ $(tc running) -eq 1 ]; then
+      tc restart
+    fi
+    ;;
+
+  'destroy')
+    if [ ! -d ${core} ]; then
+      bad_msg "${2} isn't a Solr core."
+      exit 1
+    fi
+
+    good_msg "Destroying the ${2} Solr core."
+    rm -r ${core}
+
+    if [ ! -z "$(ps aux | grep tomcat | grep -v grep)" ]; then
+      tc restart
+    fi
+    ;;
+
+  *)
+    bad_msg "${err}"
+    exit 1
+    ;;
+esac

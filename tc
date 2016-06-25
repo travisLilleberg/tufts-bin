@@ -1,0 +1,39 @@
+#!/bin/bash
+
+#@file
+#Turns Tomcat on and off
+
+source ~/.bash_functions/msgs
+
+tom_path="/Library/Tomcat/"
+
+case "${1}" in
+  'start')
+    cd /Library/Tomcat/logs
+    ${tom_path}/bin/startup.sh
+    ;;
+
+  'stop')
+    ${tom_path}/bin/shutdown.sh
+    ;;
+
+  'restart')
+    ${tom_path}/bin/shutdown.sh
+    sleep 3
+    cd /Library/Tomcat/logs
+    ${tom_path}/bin/startup.sh
+    ;;
+
+  'running')
+    if [ ! -z "$(ps aux | grep tomcat | grep -v grep)" ]; then
+      echo 1
+    else
+      echo 0
+    fi
+    ;;
+
+  *)
+    bad_msg "Gotta say 'start', 'stop', 'restart', or 'running'."
+    ;;
+esac
+

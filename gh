@@ -1,0 +1,28 @@
+#!/bin/bash
+
+#@file
+#Clones from github. Yep.
+
+#@usage
+#You want to clone this repository and it's at https://github.com/travisLilleberg/gh.
+#`gh travisLilleberg/gh` is all you need and it will clone down to your current directory.
+
+#@default_namespace
+#Since I often clone my own repositories, I set default_namespace to 'travisLilleberg'.
+#Then, I just run `gh gh` and the script appends 'travisLilleberg/' automatically.
+
+
+if [ -z "${1}" ]; then
+  echo "Need a github project name. Something like travis/rocks or something like that"
+  exit 1
+fi
+
+#Probably your github username.
+default_namespace="TuftsUniversity"
+
+if [[ "${1}" == *"/"* ]]; then
+  git clone https://github.com/${1}.git
+else
+  git clone http://github.com/${default_namespace}/${1}.git
+fi
+

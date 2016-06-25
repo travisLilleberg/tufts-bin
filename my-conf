@@ -1,0 +1,62 @@
+#!/bin/bash
+
+#@file
+# Sets up the configs for my setup specifically
+
+# Libs
+source ${HOME}/.bash_functions/msgs
+
+# Settings
+sites=${HOME}/Sites
+site_name=${PWD#$sites/}
+site_name=${site_name%%/*}
+config=${sites}/${site_name}/config
+port="8080"
+fedora="fedora3"
+if [ "${site_name}" == "trove" ]; then
+  solr="solr/mira"
+else
+  solr="solr/${site_name}"
+fi
+
+# Checks
+if [ -z "${site_name}" ]; then
+  bad_msg "Sites are in ${sites}. You seem to be in an invalid directory."
+  exit 1
+fi
+
+rake -n >/dev/null 2>/dev/null 
+if [ ${?} -gt 0 ]; then
+  bad_msg "Rake isn't working. Are you in a rails installation?"
+  exit 1
+fi
+
+# Helpers
+function copy_sample_files {
+  if [ -z "${1}" ]; then
+    bad_msg "You gotta give me a path."
+    return 1
+  fi
+
+  if [ -z "$(find ${1} -name '*.sample')" ]; then
+    return 0
+  fi
+
+  for config_file in ${1}/*.sample
+  do
+    sample_file=${config_file##*/}
+    dest_file=${sample_file%.sample}
+    cp ${config_file} ${1}/${dest_file}
+  done
+}
+
+# Process
+rake config:copy
+if [ ${?} -gt 0 ]; then
+  neutral_msg "Rake config:copy failed. Doing it manually."
+  copy_sample_files ${config}
+  copy_sample_files ${config}/initializers
+fi
+sed -i '' "s:898[[:digit:]]/fedora:${port}/${fedora}:g" ${config}/fedora.yml
+sed -i '' "s:898[[:digit:]]/solr/development:${port}/${solr}:g" ${config}/solr.yml
+

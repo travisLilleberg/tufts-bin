@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# @file
+# Starts and stops all the servers
+
+source ${HOME}/.bash_functions/msgs
+
+# Files to save stuff in
+rl="${HOME}/.t_dir"
+rdp="${HOME}/.t_redis.pid"
+rep="${HOME}/.t_resque.pid"
+rap="${HOME}/.t_rails.pid"
+
+case ${1} in
+  'start')
+    if [ -f ${rl} ]; then
+      bad_msg "Servers already appear to be running."
+      exit 1
+    fi
+    rake -n >/dev/null 2>/dev/null 
+    if [ $? -gt 0 ]; then
+      bad_msg "You're not in a Rails project."
+      exit 1
+    fi
+    echo "$(PWD)" > ${rl}
+    tc start
+    mysql.server start
+    redis-server &
+    echo "${!}" > ${rdp}
+    bundle exec resque-pool &
+    echo "${!}" > ${rep}
+    rails s >/dev/null &
+    echo "${!}" > ${rap}
+    ;;
+  'stop')
+    if [ ! -f ${rl} ]; then
+      bad_msg "Servers don't appear to be running."
+      exit 1
+    fi
+    tc stop
+    mysql.server stop
+    kill $(head -n 1 ${rdp})
+    rm ${rdp}
+    kill $(head -n 1 ${rep})
+    rm ${rep}
+    if [ -f ${rl}/tmp/pids/server.pid ]; then
+      kill $(head -n 1 ${rl}/tmp/pids/server.pid)
+    else
+      kill $(head -n 1 ${rap})
+    fi
+    rm ${rap}
+    rm ${rl}
+    ;;
+  *)
+    bad_msg "start or stop?" >&3
+    ;;
+esac
+
