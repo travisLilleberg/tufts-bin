@@ -9,19 +9,22 @@ tom_path="/Library/Tomcat/"
 
 case "${1}" in
   'start')
-    cd /Library/Tomcat/logs
-    ${tom_path}/bin/startup.sh
+    if [ $(tc running) -eq 0 ]; then
+      cd /Library/Tomcat/logs
+      ${tom_path}/bin/startup.sh
+    fi
     ;;
 
   'stop')
-    ${tom_path}/bin/shutdown.sh
+    if [ $(tc running) -gt 0 ]; then
+      ${tom_path}/bin/shutdown.sh
+    fi
     ;;
 
   'restart')
-    ${tom_path}/bin/shutdown.sh
+    tc stop
     sleep 3
-    cd /Library/Tomcat/logs
-    ${tom_path}/bin/startup.sh
+    tc start
     ;;
 
   'running')

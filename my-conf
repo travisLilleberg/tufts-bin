@@ -5,11 +5,12 @@
 
 # Libs
 source ${HOME}/.bash_functions/msgs
+source ${HOME}/.bash_functions/get_site
+
 
 # Settings
 sites=${HOME}/Sites
-site_name=${PWD#$sites/}
-site_name=${site_name%%/*}
+site_name=$(get_site)
 config=${sites}/${site_name}/config
 port="8080"
 fedora="fedora3"
@@ -38,6 +39,7 @@ function copy_sample_files {
     return 1
   fi
 
+  # The for loop below throws an error if there's nothing to loop through.
   if [ -z "$(find ${1} -name '*.sample')" ]; then
     return 0
   fi
@@ -56,7 +58,20 @@ if [ ${?} -gt 0 ]; then
   neutral_msg "Rake config:copy failed. Doing it manually."
   copy_sample_files ${config}
   copy_sample_files ${config}/initializers
+# rake config:copy works on mira, but it doesnt' copy the application.yml file.
+elif [ "${site_name}" == "mira" ]; then
+  cp ${config}/application.yml.sample ${config}/application.yml
 fi
+
+# Point fedora/solr to our local installations, instead of pre-packaged jetty.
 sed -i '' "s:898[[:digit:]]/fedora:${port}/${fedora}:g" ${config}/fedora.yml
 sed -i '' "s:898[[:digit:]]/solr/development:${port}/${solr}:g" ${config}/solr.yml
+
+# I don't know what having brian's email does in application.yml but might as well change it.
+sed -i '' "s:brian.goodmon:travis.lilleberg:g" ${config}/application.yml
+
+# Trove's object store needs to point to mira.
+if [ "${site_name}" == "trove" ]; then
+  sed -i '' "s:/tmp/local_object_store:/../mira/tmp/local_object_store:g" ${config}/application.yml
+fi
 

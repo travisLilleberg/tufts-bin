@@ -5,26 +5,27 @@
 
 # Libs
 source ~/.bash_functions/msgs
-source ~/bin/which-site
+source ~/.bash_functions/get_site
 
 
 # Settings
 solr_home="/Library/Tomcat/solr"
 if [ "${2}" == "this" ]; then
-  sites="${HOME}/Sites"
-  site_name=${PWD#$sites/}
-  site_name=${site_name%%/*}
+  site_name=$(get_site)
+  if [ -z "${site_name}" ]; then
+    exit 1
+  fi
   core=${solr_home}/${site_name}
 else
   core=${solr_home}/${2}
 fi
-err="First argument should be 'create' or 'destroy'.
+err="First argument should be 'create', 'destroy', or 'list'.
   Second argument should be core name.
   Third argument is optional conf folder for core."
 
 
 # Checks
-if [ -z "${2}" ]; then
+if [ -z "${2}" ] && [ "${1}" != "list" ]; then
   bad_msg "${err}"
   exit 1
 fi
@@ -34,7 +35,7 @@ fi
 case "${1}" in
   'create')
     if [ -e ${core} ]; then
-      bad_msg "${2} already exists as a Solr core."
+      bad_msg "${core} already exists as a Solr core."
       exit 1
     fi
 
@@ -48,14 +49,12 @@ case "${1}" in
       solr_conf=${3}
     fi
 
-    good_msg "Creating the new ${2} Solr core."
+    good_msg "Creating the new Solr core."
 
     mkdir ${core}
     touch ${core}/core.properties
     cp -r ${solr_conf} ${core}/conf
-    if [ $(tc running) -eq 1 ]; then
-      tc restart
-    fi
+    tc restart
     ;;
 
   'destroy')
@@ -66,10 +65,23 @@ case "${1}" in
 
     good_msg "Destroying the ${2} Solr core."
     rm -r ${core}
+    tc restart
+    ;;
 
-    if [ ! -z "$(ps aux | grep tomcat | grep -v grep)" ]; then
-      tc restart
-    fi
+  'list')
+    echo
+    ignore="lib example_conf"
+    for this_dir in $(find $solr_home -type d -maxdepth 1)
+    do
+      if [ "${this_dir}" == "${solr_home}" ]; then
+        continue
+      fi
+      rel_dir=${this_dir#$solr_home/}
+      if [ "${ignore}" == "${ignore/$rel_dir/}" ]; then
+        echo "${rel_dir}"
+      fi
+    done
+    echo
     ;;
 
   *)
