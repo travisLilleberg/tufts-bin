@@ -14,7 +14,7 @@ site_name=$(get_site)
 config=${sites}/${site_name}/config
 port="8080"
 fedora="fedora3"
-if [ "${site_name}" == "trove" ]; then
+if [ "${site_name}" == "tufts-image-library" ]; then
   solr="solr/mira"
 else
   solr="solr/${site_name}"

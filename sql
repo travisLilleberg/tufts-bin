@@ -13,21 +13,6 @@ case "${1}" in
   'stop')
     mysql.server stop
     ;;
-  'build')
-    brew install mysql
-    ;;
-  'destroy')
-    mysql.server stop
-    brew uninstall mysql
-    rm -r /usr/local/var/mysql
-    ;;
-  'rebuild')
-    mysql.server stop
-    brew uninstall mysql
-    rm -r /usr/local/var/mysql
-    brew install mysql
-    mysql.server start
-    ;;
   *)
     bad_msg "Please say 'start', 'stop', 'build', 'destroy' or 'rebuild'"
     ;;
