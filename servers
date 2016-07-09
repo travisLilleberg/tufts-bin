@@ -26,7 +26,9 @@ case ${1} in
       exit 1
     fi
 
-    tc start
+    if [ "${this_site}" != "marvel_companion" ]; then
+      tc start
+    fi
 
     if [ "${this_site}" == "mira" ]; then
       mysql.server start
