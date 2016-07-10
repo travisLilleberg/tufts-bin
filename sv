@@ -68,6 +68,11 @@ case ${1} in
     rm ${rap}
     rm ${rl}
     ;;
+  'restart')
+    servers stop
+    sleep 1
+    servers start
+    ;;
   *)
     bad_msg "start or stop?" >&3
     ;;
