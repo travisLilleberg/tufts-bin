@@ -26,7 +26,9 @@ case ${1} in
       exit 1
     fi
 
-    tc start
+    if [ "${this_site}" != "marvel_companion" ]; then
+      tc start
+    fi
 
     if [ "${this_site}" == "mira" ]; then
       mysql.server start
@@ -65,6 +67,11 @@ case ${1} in
 
     rm ${rap}
     rm ${rl}
+    ;;
+  'restart')
+    servers stop
+    sleep 1
+    servers start
     ;;
   *)
     bad_msg "start or stop?" >&3
