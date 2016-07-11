@@ -13,7 +13,7 @@ sites=${HOME}/Sites
 site_name=$(get_site)
 config=${sites}/${site_name}/config
 port="8080"
-fedora="fedora3"
+fedora="fedora"
 if [ "${site_name}" == "tufts-image-library" ]; then
   solr="solr/mira"
 else
