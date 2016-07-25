@@ -69,9 +69,9 @@ case ${1} in
     rm ${rl}
     ;;
   'restart')
-    servers stop
+    sv stop
     sleep 1
-    servers start
+    sv start
     ;;
   *)
     bad_msg "start or stop?" >&3
