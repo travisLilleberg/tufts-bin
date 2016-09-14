@@ -11,17 +11,19 @@ source ~/.bash_functions/get_site
 # Settings
 solr_home="/Library/Tomcat/solr"
 if [ "${2}" == "this" ]; then
-  site_name=$(get_site)
-  if [ -z "${site_name}" ]; then
+  core_name=$(get_site)
+  if [ -z "${core_name}" ]; then
     exit 1
   fi
-  core=${solr_home}/${site_name}
 else
-  core=${solr_home}/${2}
+  core_name="${2}"
 fi
+
+core=${solr_home}/${core_name}
 err="First argument should be 'create', 'destroy', or 'list'.
   Second argument should be core name.
   Third argument is optional conf folder for core."
+solr_url="localhost:8080/solr/${core_name}"
 
 
 # Checks
@@ -83,6 +85,19 @@ case "${1}" in
     done
     echo
     ;;
+
+  'clear')
+    if [ ! -d ${core} ]; then
+      bad_msg "${2} isn't a Solr core."
+      exit 1
+    fi
+    echo
+    target="${solr_url}/update?stream.body=<delete><query>*:*</query></delete>&commit=true"
+    good_msg "Clearing ${core_name}."
+    curl $target
+    echo
+    ;;
+
 
   *)
     bad_msg "${err}"
