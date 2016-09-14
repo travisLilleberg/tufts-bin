@@ -13,6 +13,11 @@ rep="${HOME}/.t_resque.pid"
 rap="${HOME}/.t_rails.pid"
 this_site=$(get_site)
 
+# Servers with specific needs
+redis_sites="mira tufts_concerns"
+mysql_sites="mira"
+resque_sites="mira"
+
 case ${1} in
   'start')
     if [ -f ${rl} ]; then
@@ -20,20 +25,24 @@ case ${1} in
       exit 1
     fi
 
-    rake -n >/dev/null 2>/dev/null 
+    rake -n >/dev/null 2>/dev/null
     if [ $? -gt 0 ]; then
       bad_msg "You're not in a Rails project."
       exit 1
     fi
 
-    if [ "${this_site}" != "marvel_companion" ]; then
-      tc start
+    tc start
+
+    if [[ " ${mysql_sites[@]} " =~ " ${this_site} " ]]; then
+      mysql.server start
     fi
 
-    if [ "${this_site}" == "mira" ]; then
-      mysql.server start
+    if [[ " ${redis_sites[@]} " =~ " ${this_site} " ]]; then
       redis-server &
       echo "${!}" > ${rdp}
+    fi
+
+    if [[ " ${resque_sites[@]} " =~ " ${this_site} " ]]; then
       bundle exec resque-pool &
       echo "${!}" > ${rep}
     fi
@@ -50,11 +59,14 @@ case ${1} in
     fi
 
     tc stop
+    mysql.server stop
 
     if [ -f ${rdp} ]; then
-      mysql.server stop
       kill $(head -n 1 ${rdp})
       rm ${rdp}
+    fi
+
+    if [ -f ${rep} ]; then
       kill $(head -n 1 ${rep})
       rm ${rep}
     fi
