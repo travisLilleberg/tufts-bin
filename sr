@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#@file
+# Greps through a rails site, excluding specific directories.
+
+if [ -z ${1} ]; then
+  source ${HOME}/.bash_functions/msgs
+  bad_msg "Give me something to search"
+  exit 1
+fi
+
+grep -r --exclude-dir=log --exclude-dir=tmp --exclude-dir=spec --exclude-dir=test --color "${1}" .
+
