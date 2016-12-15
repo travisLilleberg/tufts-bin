@@ -10,14 +10,16 @@ tom_path="/Library/Tomcat/"
 case "${1}" in
   'start')
     if [ $(tc running) -eq 0 ]; then
-      cd /Library/Tomcat/logs
+#      cd /Library/Tomcat/logs
       ${tom_path}/bin/startup.sh
+      /usr/local/solr/bin/solr start
     fi
     ;;
 
   'stop')
     if [ $(tc running) -gt 0 ]; then
       ${tom_path}/bin/shutdown.sh
+      /usr/local/solr/bin/solr stop
     fi
     ;;
 
