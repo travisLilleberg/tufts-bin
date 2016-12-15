@@ -9,7 +9,10 @@ source ~/.bash_functions/get_site
 
 
 # Settings
-solr_home="/Library/Tomcat/solr"
+solr_root="/usr/local/solr"
+solr_home="${solr_root}/server/solr"
+solr_script="${solr_root}/bin/solr"
+
 if [ "${2}" == "this" ]; then
   core_name=$(get_site)
   if [ -z "${core_name}" ]; then
@@ -23,27 +26,35 @@ core=${solr_home}/${core_name}
 err="First argument should be 'create', 'destroy', or 'list'.
   Second argument should be core name.
   Third argument is optional conf folder for core."
-solr_url="localhost:8080/solr/${core_name}"
-
-
-# Checks
-if [ -z "${2}" ] && [ "${1}" != "list" ]; then
-  bad_msg "${err}"
-  exit 1
-fi
+solr_url="localhost:8983/solr/${core_name}"
 
 
 # Gooo
 case "${1}" in
+  'start')
+    ${solr_script} start
+    ;;
+
+  'stop')
+    ${solr_script} stop
+    ;;
+
+  'restart')
+    ${solr_script} restart
+    ;;
+
   'create')
+    if [ -z "${2}" ]; then
+      bad_msg "${err}"
+      exit 1
+    fi
+
     if [ -e ${core} ]; then
       bad_msg "${core} already exists as a Solr core."
       exit 1
     fi
 
-    if [ -z ${3} ]; then
-      solr_conf=${solr_home}/example_conf
-    else
+    if [ ! -z ${3} ]; then
       if [ ! -d ${3} ]; then
         bad_msg "${3} is not a directory."
         exit 1
@@ -53,26 +64,31 @@ case "${1}" in
 
     good_msg "Creating the new Solr core."
 
-    mkdir ${core}
-    touch ${core}/core.properties
-    cp -r ${solr_conf} ${core}/conf
-    tc restart
+
+    ${solr_script} create -c ${core_name}
+    cp ${solr_conf}/* ${core}/conf
+    ${solr_script} restart
     ;;
 
   'destroy')
+    if [ -z "${2}" ]; then
+      bad_msg "${err}"
+      exit 1
+    fi
+
     if [ ! -d ${core} ]; then
       bad_msg "${2} isn't a Solr core."
       exit 1
     fi
 
     good_msg "Destroying the ${2} Solr core."
-    rm -r ${core}
-    tc restart
+    ${solr_script} delete -c ${core_name}
+    ${solr_script} restart
     ;;
 
   'list')
     echo
-    ignore="lib example_conf"
+    ignore="configsets"
     for this_dir in $(find $solr_home -type d -maxdepth 1)
     do
       if [ "${this_dir}" == "${solr_home}" ]; then
@@ -87,6 +103,11 @@ case "${1}" in
     ;;
 
   'clear')
+    if [ -z "${2}" ]; then
+      bad_msg "${err}"
+      exit 1
+    fi
+
     if [ ! -d ${core} ]; then
       bad_msg "${2} isn't a Solr core."
       exit 1
@@ -97,7 +118,6 @@ case "${1}" in
     curl $target
     echo
     ;;
-
 
   *)
     bad_msg "${err}"
