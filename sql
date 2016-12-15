@@ -14,7 +14,7 @@ case "${1}" in
     mysql.server stop
     ;;
   *)
-    bad_msg "Please say 'start', 'stop', 'build', 'destroy' or 'rebuild'"
+    bad_msg "Please say 'start', 'stop'"
     ;;
 esac
 
