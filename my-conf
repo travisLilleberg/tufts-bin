@@ -12,7 +12,7 @@ source ${HOME}/.bash_functions/get_site
 sites=${HOME}/Sites
 site_name=$(get_site)
 config=${sites}/${site_name}/config
-port="8080"
+fed_port="8080"
 fedora="fedora"
 if [ "${site_name}" == "tufts-image-library" ]; then
   solr="solr/mira"
@@ -26,7 +26,7 @@ if [ -z "${site_name}" ]; then
   exit 1
 fi
 
-rake -n >/dev/null 2>/dev/null 
+rake -n >/dev/null 2>/dev/null
 if [ ${?} -gt 0 ]; then
   bad_msg "Rake isn't working. Are you in a rails installation?"
   exit 1
@@ -64,8 +64,9 @@ elif [ "${site_name}" == "mira" ]; then
 fi
 
 # Point fedora/solr to our local installations, instead of pre-packaged jetty.
-sed -i '' "s:898[[:digit:]]/fedora:${port}/${fedora}:g" ${config}/fedora.yml
-sed -i '' "s:898[[:digit:]]/solr/development:${port}/${solr}:g" ${config}/solr.yml
+sed -i '' "s:898[[:digit:]]/fedora:${fed_port}/${fedora}:g" ${config}/fedora.yml
+sed -i '' "s:solr/development:${solr}:g" ${config}/solr.yml
+sed -i '' "s:solr/development:${solr}:g" ${config}/blacklight.yml
 
 # I don't know what having brian's email does in application.yml but might as well change it.
 sed -i '' "s:brian.goodmon:travis.lilleberg:g" ${config}/application.yml
