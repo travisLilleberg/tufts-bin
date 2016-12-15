@@ -31,8 +31,6 @@ case ${1} in
       exit 1
     fi
 
-    tc start
-
     if [[ " ${mysql_sites[@]} " =~ " ${this_site} " ]]; then
       mysql.server start
     fi
@@ -47,7 +45,7 @@ case ${1} in
       echo "${!}" > ${rep}
     fi
 
-    rails s >/dev/null &
+    rails s >/dev/null 2>&1 &
     echo "${!}" > ${rap}
     echo "$(PWD)" > ${rl}
 
@@ -58,8 +56,9 @@ case ${1} in
       exit 1
     fi
 
-    tc stop
-    mysql.server stop
+    if [[ " ${mysql_sites[@]} " =~ " ${this_site} " ]]; then
+      mysql.server stop
+    fi
 
     if [ -f ${rdp} ]; then
       kill $(head -n 1 ${rdp})
