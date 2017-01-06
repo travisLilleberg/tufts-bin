@@ -1,0 +1,69 @@
+#!/bin/bash
+
+#@file
+# Pulls my config-files branch and updates it with my latest config files
+
+
+# Libs
+source ~/.bash_functions/msgs
+
+
+# Settings
+target_files=("bash_profile" "vimrc" "bash_colors")
+
+
+# Functions
+function get_repo {
+  cd ${HOME}/Desktop
+  gh travisLilleberg/config-files
+  cd config-files
+}
+
+function clean_repo {
+  cd ${HOME}/Desktop
+  sudo rm -r config-files
+}
+
+
+# Goooooo
+case "${1}"
+  "update")
+    if [ -z "${2}" ]; then
+      bad_msg "You gotta give me a git commit message."
+      exit 1
+    fi
+
+    neutral_msg "Updating your config repository!"
+
+    get_repo
+
+    for filename in "${target_files[@]}"
+    do
+      cp ${HOME}/.${filename} ${filename}
+    done
+
+    ggo "${2}"
+
+    clean_repo
+    ;;
+
+  "load")
+    neutral_msg "Loading config files from git."
+
+    get_repo
+
+    # Back up current files and replace them from git
+    for filename in "${target_files[@]}"
+    do
+      cp ${HOME}/.${filename} ${HOME}/.${filename}.bak
+      cp ${filename} ${HOME}/.${filename}
+    done
+
+    clean_repo
+    ;;
+
+  *)
+    bad_msg "Update or load?"
+    ;;
+esac
+
