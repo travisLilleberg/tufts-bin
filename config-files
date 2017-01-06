@@ -6,7 +6,7 @@
 
 # Libs
 source ~/.bash_functions/msgs
-
+source ~/.bash_functions/git_helpers
 
 # Settings
 target_files=("bash_profile" "vimrc" "bash_colors")
@@ -26,7 +26,7 @@ function clean_repo {
 
 
 # Goooooo
-case "${1}"
+case "${1}" in
   "update")
     if [ -z "${2}" ]; then
       bad_msg "You gotta give me a git commit message."
@@ -62,8 +62,15 @@ case "${1}"
     clean_repo
     ;;
 
+  "clean")
+    for filename in "${target_files[@]}"
+    do
+      rm ${HOME}/.${filename}.bak
+    done
+    ;;
+
   *)
-    bad_msg "Update or load?"
+    bad_msg "Update, load or clean?"
     ;;
 esac
 
