@@ -66,7 +66,8 @@ case "${1}" in
 
 
     ${solr_script} create -c ${core_name}
-    cp ${solr_conf}/* ${core}/conf
+    cp -r ${solr_conf}/* ${core}/conf
+    sed -i '' 's:units="degrees":distanceUnits="degrees":g' ${core}/conf/schema.xml
     ${solr_script} restart
     ;;
 
