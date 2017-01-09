@@ -4,14 +4,11 @@
 #Manages the solr cores
 
 # Libs
-source ~/.bash_functions/msgs
 source ~/.bash_functions/get_site
 
 
 # Settings
-solr_root="/usr/local/solr"
-solr_home="${solr_root}/server/solr"
-solr_script="${solr_root}/bin/solr"
+solr_script="${HOME}/.apps/solr6"
 
 if [ "${2}" == "this" ]; then
   core_name=$(get_site)
@@ -21,12 +18,6 @@ if [ "${2}" == "this" ]; then
 else
   core_name="${2}"
 fi
-
-core=${solr_home}/${core_name}
-err="First argument should be 'create', 'destroy', or 'list'.
-  Second argument should be core name.
-  Third argument is optional conf folder for core."
-solr_url="localhost:8983/solr/${core_name}"
 
 
 # Gooo
@@ -44,84 +35,20 @@ case "${1}" in
     ;;
 
   'create')
-    if [ -z "${2}" ]; then
-      bad_msg "${err}"
-      exit 1
-    fi
-
-    if [ -e ${core} ]; then
-      bad_msg "${core} already exists as a Solr core."
-      exit 1
-    fi
-
-    if [ ! -z ${3} ]; then
-      if [ ! -d ${3} ]; then
-        bad_msg "${3} is not a directory."
-        exit 1
-      fi
-      solr_conf=${3}
-    fi
-
-    good_msg "Creating the new Solr core."
-
-
-    ${solr_script} create -c ${core_name}
-    cp -r ${solr_conf}/* ${core}/conf
-    sed -i '' 's:units="degrees":distanceUnits="degrees":g' ${core}/conf/schema.xml
-    ${solr_script} restart
+    ${solr_script} create $core_name $3
     ;;
 
   'destroy')
-    if [ -z "${2}" ]; then
-      bad_msg "${err}"
-      exit 1
-    fi
-
-    if [ ! -d ${core} ]; then
-      bad_msg "${2} isn't a Solr core."
-      exit 1
-    fi
-
-    good_msg "Destroying the ${2} Solr core."
-    ${solr_script} delete -c ${core_name}
-    ${solr_script} restart
+    ${solr_script} destroy $core_name
     ;;
 
   'list')
-    echo
-    ignore="configsets"
-    for this_dir in $(find $solr_home -type d -maxdepth 1)
-    do
-      if [ "${this_dir}" == "${solr_home}" ]; then
-        continue
-      fi
-      rel_dir=${this_dir#$solr_home/}
-      if [ "${ignore}" == "${ignore/$rel_dir/}" ]; then
-        echo "${rel_dir}"
-      fi
-    done
-    echo
+    ${solr_script} list
     ;;
 
   'clear')
-    if [ -z "${2}" ]; then
-      bad_msg "${err}"
-      exit 1
-    fi
-
-    if [ ! -d ${core} ]; then
-      bad_msg "${2} isn't a Solr core."
-      exit 1
-    fi
-    echo
-    target="${solr_url}/update?stream.body=<delete><query>*:*</query></delete>&commit=true"
-    good_msg "Clearing ${core_name}."
-    curl $target
-    echo
+    ${solr_script} clear $core_name
     ;;
 
-  *)
-    bad_msg "${err}"
-    exit 1
-    ;;
 esac
+
