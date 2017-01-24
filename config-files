@@ -69,8 +69,15 @@ case "${1}" in
     done
     ;;
 
+  "undo")
+    for filename in "${target_files[@]}"
+    do
+      mv ${HOME}/.${filename}.bak ${HOME}/.${filename}
+    done
+    ;;
+
   *)
-    bad_msg "Update, load or clean?"
+    bad_msg "Update, load, undo or clean?"
     ;;
 esac
 

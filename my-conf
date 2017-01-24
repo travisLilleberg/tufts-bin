@@ -67,6 +67,7 @@ fi
 sed -i '' "s:898[[:digit:]]/fedora:${fed_port}/${fedora}:g" ${config}/fedora.yml
 sed -i '' "s:solr/development:${solr}:g" ${config}/solr.yml
 sed -i '' "s:solr/development:${solr}:g" ${config}/blacklight.yml
+sed -i '' "s:solr/blacklight-core:${solr}:g" ${config}/blacklight.yml
 
 # I don't know what having brian's email does in application.yml but might as well change it.
 sed -i '' "s:brian.goodmon:travis.lilleberg:g" ${config}/application.yml
