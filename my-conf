@@ -63,10 +63,19 @@ elif [ "${site_name}" == "mira" ]; then
   cp ${config}/application.yml.sample ${config}/application.yml
 fi
 
+if [ -f ${config}/ldap.yml.sample ] && [ -f ${HOME}/.lp.yml ]; then
+  neutral_msg "Copying secret ldap settings."
+  cp ${HOME}/.lp.yml ${config}/ldap.yml
+fi
+
+neutral_msg "Doing all kinds of sed"
 # Point fedora/solr to our local installations, instead of pre-packaged jetty.
 sed -i '' "s:898[[:digit:]]/fedora:${fed_port}/${fedora}:g" ${config}/fedora.yml
+sed -i '' "s:898[[:digit:]]:8080:g" ${config}/fedora.yml
 sed -i '' "s:solr/development:${solr}:g" ${config}/solr.yml
 sed -i '' "s:solr/development:${solr}:g" ${config}/blacklight.yml
+sed -i '' "s:solr/test:${solr}:g" ${config}/solr.yml
+sed -i '' "s:solr/test:${solr}:g" ${config}/blacklight.yml
 sed -i '' "s:solr/blacklight-core:${solr}:g" ${config}/blacklight.yml
 
 # I don't know what having brian's email does in application.yml but might as well change it.
