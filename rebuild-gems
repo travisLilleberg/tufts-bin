@@ -1,0 +1,9 @@
+#!/bin/bash
+
+## @file
+# This will destroy all your gems, delete Gemfile.lock and reinstall all the gems
+
+gem uninstall --all -x --force
+rm Gemfile.lock
+gem install bundle
+bundle install

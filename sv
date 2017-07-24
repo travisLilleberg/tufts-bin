@@ -12,6 +12,7 @@ rdp="${HOME}/.t_redis.pid"
 rep="${HOME}/.t_resque.pid"
 rap="${HOME}/.t_rails.pid"
 this_site=$(get_site)
+log_file="${HOME}/rails_log"
 
 # Servers with specific needs
 redis_sites="mira tufts_concerns"
@@ -45,7 +46,7 @@ case ${1} in
       echo "${!}" > ${rep}
     fi
 
-    rails s >/dev/null 2>&1 &
+    rails s >${log_file} 2>&1 &
     echo "${!}" > ${rap}
     echo "$(PWD)" > ${rl}
 
@@ -77,6 +78,7 @@ case ${1} in
     fi
 
     rm ${rap}
+    rm ${log_file}
     rm ${rl}
     ;;
   'restart')
