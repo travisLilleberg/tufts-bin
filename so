@@ -22,6 +22,10 @@ fi
 
 # Gooo
 case "${1}" in
+  'is_running')
+    ${solr_script} is_running
+    ;;
+
   'start')
     ${solr_script} start
     ;;
