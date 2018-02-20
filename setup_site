@@ -1,0 +1,143 @@
+#!/bin/bash
+
+# @file
+# This command sets up the config files and solr cores in a new site.
+# It also sets up the database.
+
+# Libs
+source ${HOME}/.bash_functions/msgs
+source ${HOME}/.bash_functions/get_site
+source ${HOME}/.bash_functions/string_manipulators
+
+# Settings
+site_name="$(get_site)"
+site_root=${HOME}/Sites/${site_name}
+site_config=${site_root}/config
+core_n_db=${site_name//-/_}
+test_core_n_db="${core_n_db}_test"
+solr_port="8983"
+fedora_port="8080"
+
+# Checks
+if [ -z "${site_name}" ]; then
+  bad_msg "You seem to be in an invalid directory."
+  exit 1
+fi
+
+rake -n >/dev/null 2>/dev/null
+if [ ${?} -gt 0 ]; then
+  bad_msg "Rake isn't working. Are you in a rails installation?"
+  exit 1
+fi
+
+# Functions
+function copy_config {
+  local yml_file=${site_config}/${1}.yml
+  if [ ! -f ${yml_file}.sample ]; then
+    return 1
+  fi
+
+  good_msg "Copying ${yml_file}"
+  cp ${yml_file}.sample ${yml_file}
+  return 0
+}
+
+function setup_db {
+  neutral_msg "========================================================
+Setting up databases and conf files, and running migrations.
+========================================================"
+
+  if [ -z $(pgrep mysql) ]; then
+    mysql.server start
+  fi
+
+  copy_config database
+  if [ $? -eq 0 ]; then
+    good_msg "Setting databases to ${core_n_db} and ${test_core_n_db}."
+    replace  "adapter: sqlite3" "adapter: mysql2" ${site_config}/database.yml
+    replace  "db/development.sqlite3" "${core_n_db}" ${site_config}/database.yml
+    replace  "db/test.sqlite3" "${test_core_n_db}" ${site_config}/database.yml
+    append "${core_n_db}" "\ \ username: root" ${site_config}/database.yml
+  fi
+
+  mysql -uroot -e "create database ${core_n_db};"
+  bin/rails db:migrate
+  mysql -uroot -e "create database ${test_core_n_db};"
+  bin/rails RAILS_ENV=test db:migrate
+}
+
+function setup_fedora {
+  neutral_msg "========================================
+Setting up Solr cores and conf files.
+========================================"
+
+  if [ -z $(pgrep tomcat) ]; then
+    tomcat start
+  fi
+
+  copy_config fedora
+  if [ $? -eq 0 ]; then
+    replace "/rest" "/fedora4/rest" ${site_config}/fedora.yml
+    replace "898[[:digit:]]" "${fedora_port}" ${site_config}/fedora.yml
+  fi
+}
+
+function setup_solr {
+  neutral_msg "========================================
+Setting up Solr cores and conf files.
+========================================"
+  local solr_cores_created=0
+
+  if [ $(so is_running) == "0" ]; then
+    so start
+  fi
+
+  # Start with blacklight.yml, since that's in most sites.
+  copy_config blacklight
+  if [ $? -eq 0 ]; then
+    good_msg "Setting blacklight cores to ${core_n_db} and ${test_core_n_db}."
+    replace "hydra-development" "${core_n_db}" ${site_config}/blacklight.yml
+    replace "hydra-test" "${test_core_n_db}" ${site_config}/blacklight.yml
+    replace "898[[:digit:]]" "${solr_port}" ${site_config}/blacklight.yml
+
+    # Create the solr cores.
+    good_msg "Creating solr cores: ${core_n_db}, ${test_core_n_db}."
+    so create ${core_n_db} $(pwd)/solr/conf
+    so create ${test_core_n_db} $(pwd)/solr/conf
+
+    if [ $? -ne 0 ]; then
+      bad_msg "Solr cores not created!"
+    else
+      solr_cores_created=1
+    fi
+  fi # Finished with blacklight.yml
+
+  # Move on to solr.yml, if it exists.
+  copy_config solr
+  if [ $? -eq 0 ]; then
+    good_msg "Setting rsolr cores to ${core_n_db} and ${test_core_n_db}."
+    replace "hydra-development" "${core_n_db}" ${site_config}/solr.yml
+    replace "hydra-test" "${test_core_n_db}" ${site_config}/solr.yml
+    replace "898[[:digit:]]" "${solr_port}" ${site_config}/solr.yml
+
+    # Only create the cores if they weren't already created for blacklight.yml.
+    if [ ${solr_cores_created} -eq 0 ]; then
+      good_msg "Creating solr cores: ${core_n_db}, ${test_core_n_db}."
+      so create ${core_n_db} ./solr/conf
+      so create ${test_core_n_db} ./solr/conf
+
+      if [ $? -ne 0 ]; then
+        bad_msg "Solr cores not created!"
+      fi
+    fi
+  fi # Finished with solr.yml
+}
+
+# Goooo
+copy_config "redis"
+copy_config "secrets"
+copy_config "devise"
+setup_fedora
+setup_solr
+setup_db
+
