@@ -12,12 +12,12 @@ solr_script="${HOME}/.apps/solr6"
 
 if [ "${2}" == "this" ]; then
   core_name=$(get_site)
-  if [ -z "${core_name}" ]; then
-    exit 1
-  fi
+elif [ "${2}" == "test" ]; then
+  core_name=$(get_site)-test
 else
   core_name="${2}"
 fi
+
 
 
 # Gooo
@@ -39,10 +39,16 @@ case "${1}" in
     ;;
 
   'create')
+    if [ -z "${core_name}" ]; then
+      exit 1
+    fi
     ${solr_script} create $core_name $3
     ;;
 
   'destroy')
+    if [ -z "${core_name}" ]; then
+      exit 1
+    fi
     ${solr_script} destroy $core_name
     ;;
 
@@ -51,6 +57,9 @@ case "${1}" in
     ;;
 
   'clear')
+    if [ -z "${core_name}" ]; then
+      exit 1
+    fi
     ${solr_script} clear $core_name
     ;;
 
