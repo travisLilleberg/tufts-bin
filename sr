@@ -9,5 +9,5 @@ if [ -z "${1}" ]; then
   exit 1
 fi
 
-grep -r -I --exclude-dir=app/assets --exclude-dir=.git --exclude-dir=log --exclude-dir=tmp --exclude-dir=spec --exclude-dir=test --color "${1}" .
+grep -r -I --exclude-dir=.idea --exclude-dir=app/assets --exclude-dir=.git --exclude-dir=log --exclude-dir=tmp --exclude-dir=spec --exclude-dir=test --color "${1}" .
 

@@ -1,0 +1,51 @@
+#!/bin/bash
+
+########################################################################
+# @file                                                                #
+# Adds/removes Spring from an environment                              #
+########################################################################
+
+# Libs
+source ~/.bash_functions/msgs
+
+# Settings
+gemfile="$(pwd)/Gemfile"
+
+# Validation
+if [ ! -f ${gemfile} ]; then
+  bad_msg "No Gemfile!"
+  exit 1
+fi
+
+
+# Functions
+function enable_spring {
+  sed -i '' "s:#gem 'spring:gem 'spring:g" ${gemfile}
+  bundle install
+  bundle exec spring binstub rspec
+  spring stop
+}
+
+function disable_spring {
+  spring stop
+  sed -i '' "s:gem 'spring:#gem 'spring:g" ${gemfile}
+  bundle install
+  bin/spring binstub --remove --all
+}
+
+
+# Go!
+case "${1}" in
+  'enable')
+    enable_spring
+    ;;
+
+  'disable')
+    disable_spring
+    ;;
+
+  *)
+    bad_msg 'Enable or disable?'
+    ;;
+esac
+
